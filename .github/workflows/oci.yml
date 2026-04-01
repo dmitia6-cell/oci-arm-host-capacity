@@ -30,17 +30,13 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev
 
-      - name: Run
-        id: run
-        run: |
-          OUTPUT=$(php index.php 2>&1)
-          echo "$OUTPUT"
-          echo "result=$OUTPUT" >> $GITHUB_OUTPUT
-
-      - name: Notify Telegram
+      - name: Run and Notify
         if: always()
         run: |
+          OUTPUT=$(php index.php 2>&1 || true)
           RUN_NUMBER=${{ github.run_number }}
-          RESULT="${{ steps.run.outputs.result }}"
-          MESSAGE="🔄 Oracle спроба #${RUN_NUMBER}%0A${RESULT}"
-          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_CHAT_ID }}&text=${MESSAGE}"
+          MESSAGE="🔄 Oracle спроба #${RUN_NUMBER}
+${OUTPUT}"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d text="${MESSAGE}"
