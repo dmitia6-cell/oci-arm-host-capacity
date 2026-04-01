@@ -7,35 +7,35 @@ on:
 
 jobs:
   create-instance:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-
-      - name: Create .env
-        run: cp .env.example .env
-
-      - name: Set OCI_PRIVATE_KEY
-        run: |
-          echo "${{ secrets.OCI_PRIVATE_KEY }}" > /tmp/oci_private_key.pem
-          chmod 600 /tmp/oci_private_key.pem
-
-      - name: Update OCI_PRIVATE_KEY_FILENAME in .env
-        run: sed -i 's|OCI_PRIVATE_KEY_FILENAME=|OCI_PRIVATE_KEY_FILENAME=/tmp/oci_private_key.pem|g' .env
-
-      - name: Install dependencies
-        run: composer install --no-dev
-
-      - name: Run and Notify
-        if: always()
-        run: |
-          OUTPUT=$(php index.php 2>&1 || true)
-          RUN_NUMBER=${{ github.run_number }}
-          TEXT="Oracle спроба %23${RUN_NUMBER}: ${OUTPUT}"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=${TEXT}"
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+  
+        - name: Setup PHP
+          uses: shivammathur/setup-php@v2
+          with:
+            php-version: '8.1'
+  
+        - name: Create .env
+          run: cp .env.example .env
+  
+        - name: Set OCI_PRIVATE_KEY
+          run: |
+            echo "${{ secrets.OCI_PRIVATE_KEY }}" > /tmp/oci_private_key.pem
+            chmod 600 /tmp/oci_private_key.pem
+  
+        - name: Update OCI_PRIVATE_KEY_FILENAME in .env
+          run: sed -i 's|OCI_PRIVATE_KEY_FILENAME=|OCI_PRIVATE_KEY_FILENAME=/tmp/oci_private_key.pem|g' .env
+  
+        - name: Install dependencies
+          run: composer install --no-dev
+  
+        - name: Run and Notify
+          if: always()
+          run: |
+            OUTPUT=$(php index.php 2>&1 || true)
+            RUN_NUMBER=${{ github.run_number }}
+            TEXT="Oracle спроба %23${RUN_NUMBER}: ${OUTPUT}"
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+              -d "text=${TEXT}"  
