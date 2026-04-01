@@ -1,0 +1,32 @@
+name: OCI ARM Instance Creator
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  create-instance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      - name: Create .env
+        run: cp .env.example .env
+
+      - name: Set OCI_PRIVATE_KEY
+        run: echo "${{ secrets.OCI_PRIVATE_KEY }}" > /tmp/oci_private_key.pem
+
+      - name: Update OCI_PRIVATE_KEY_FILENAME in .env
+        run: sed -i 's|OCI_PRIVATE_KEY_FILENAME=|OCI_PRIVATE_KEY_FILENAME=/tmp/oci_private_key.pem|' .env
+
+      - name: Install dependencies
+        run: composer install --no-dev
+
+      - name: Run
+        run: php index.php
