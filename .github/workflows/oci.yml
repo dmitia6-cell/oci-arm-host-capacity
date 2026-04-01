@@ -21,7 +21,9 @@ jobs:
 
       - name: Set OCI_PRIVATE_KEY
         run: |
-          echo "${{ secrets.OCI_PRIVATE_KEY }}" > /tmp/oci_private_key.pem
+          cat << 'EOF' > /tmp/oci_private_key.pem
+          ${{ secrets.OCI_PRIVATE_KEY }}
+          EOF
           chmod 600 /tmp/oci_private_key.pem
 
       - name: Update OCI_PRIVATE_KEY_FILENAME in .env
