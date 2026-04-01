@@ -21,9 +21,7 @@ jobs:
 
       - name: Set OCI_PRIVATE_KEY
         run: |
-          cat << 'EOF' > /tmp/oci_private_key.pem
-          ${{ secrets.OCI_PRIVATE_KEY }}
-          EOF
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > /tmp/oci_private_key.pem
           chmod 600 /tmp/oci_private_key.pem
 
       - name: Update OCI_PRIVATE_KEY_FILENAME in .env
@@ -33,4 +31,16 @@ jobs:
         run: composer install --no-dev
 
       - name: Run
-        run: php index.php
+        id: run
+        run: |
+          OUTPUT=$(php index.php 2>&1)
+          echo "$OUTPUT"
+          echo "result=$OUTPUT" >> $GITHUB_OUTPUT
+
+      - name: Notify Telegram
+        if: always()
+        run: |
+          RUN_NUMBER=${{ github.run_number }}
+          RESULT="${{ steps.run.outputs.result }}"
+          MESSAGE="🔄 Oracle спроба #${RUN_NUMBER}%0A${RESULT}"
+          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_CHAT_ID }}&text=${MESSAGE}"
